@@ -25,12 +25,11 @@ class Record:
         self.phones.append(Phone(phone))
 
     def remove_phone(self, phone):
-        for p in self.phones:
-            if p.value == phone:
-                self.phones.remove(p)
-                return
-        raise ValueError("Phone number not found.")
-       
+        phone_rm = self.find_phone(phone)
+        if phone_rm:
+            self.phones.remove(phone_rm)
+        else:
+            raise ValueError("Phone number not found.")
 
     def find_phone(self, phone):
         for p in self.phones:
@@ -39,18 +38,12 @@ class Record:
         return None
 
     def edit_phone(self, old_phone, new_phone):
-        try:
-            new_phone_obj = Phone(new_phone)
-        except ValueError as e:
-            raise ValueError(f"New phone is invalid: {e}")
-
-        # 🔧 Используем find_phone и remove_phone
-        phone_to_edit = self.find_phone(old_phone)
-        if phone_to_edit:
-            self.remove_phone(old_phone)
-            self.phones.append(new_phone_obj)
-        else:
-            raise ValueError("Old phone number not found.")
+       phone_to_edit = self.find_phone(old_phone)
+       if phone_to_edit:
+           self.add_phone(new_phone)
+           self.remove_phone(old_phone)
+       else:
+           raise ValueError("Old phone number not found.")
 
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {', '.join(p.value for p in self.phones)}"

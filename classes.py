@@ -1,4 +1,7 @@
 from collections import UserDict
+from datetime import datetime, date, timedelta
+
+
 
 class Field:
     def __init__(self, value):
@@ -7,19 +10,39 @@ class Field:
     def __str__(self):
         return str(self.value)
 
+
+
 class Name(Field):
     pass
+
+
 
 class Phone(Field):
     def __init__(self, value):
         if len(value) != 10 or not value.isdigit():
             raise ValueError("Phone number must be 10 digits.")
         super().__init__(value)
+        
+        
+        
+
+class Birthday(Field):
+    def __init__(self, value):
+        try:
+            date_obj = datetime.strptime(value, "%d.%m.%Y").date()
+            super().__init__(date_obj)
+        except ValueError:
+            raise ValueError("Invalid date format. Use DD.MM.YYYY")
+        
+        
+        
+        
 
 class Record:
     def __init__(self, name):
         self.name = Name(name)
         self.phones = []
+        self.birthday = None
 
     def add_phone(self, phone):
         self.phones.append(Phone(phone))
@@ -44,9 +67,18 @@ class Record:
            self.remove_phone(old_phone)
        else:
            raise ValueError("Old phone number not found.")
+    
+    def add_birthday(self, birthday_str):  
+        self.birthday = Birthday(birthday_str)
+        
 
     def __str__(self):
+        birthday_str = f", birthday: {self.birthday.value.strftime('%d.%m.%Y')}" if self.birthday else ""
         return f"Contact name: {self.name.value}, phones: {', '.join(p.value for p in self.phones)}"
+    
+    
+    
+    
 
 class AddressBook(UserDict):
     def add_record(self, record):
@@ -65,4 +97,28 @@ class AddressBook(UserDict):
         if not self.data:
             return "The contact list is empty."
         return "\n".join(str(record) for record in self.data.values())
-
+    
+    def get_upcoming_birthdays(self, days = 7):
+        upcoming = []
+        today = date.today()
+        
+        for record in self.data.values():
+            if not record.birthday:
+                continue
+            bday = record.birthday.value.replace(year = today.year)
+            
+            if bday < today:
+                bday = bday.replace(year = today.year + 1)
+                
+            days_diff = (bday - today).days 
+            
+            if 0 <= days_diff <=days:
+                if bday.weekday() >= 5:
+                    shift = 7 - bday.weekday()
+                    bday += timedelta(days = shift)
+                    
+                upcoming.append({
+                    "name": record.name.value,
+                    "birthday": bday.strftime("%d.%m.%Y") 
+                })
+        return upcoming
